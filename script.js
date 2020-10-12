@@ -64,6 +64,7 @@ backspace.addEventListener('click', handleBackspace);
 function handleNumbers(eventOrNumber) {
     
     // Handle the button press for all number buttons and keys
+    let number;
 
     if (eventOrNumber.type === 'click') {
         number = parseInt(this.value)
@@ -71,8 +72,6 @@ function handleNumbers(eventOrNumber) {
     else {
         number = eventOrNumber;
     }
-
-    number = typeof number === 'number' ? number : parseInt(this.value);
     // if we do a click event the variable will be an event 
     // but if we keypress, a number is passed
 
@@ -105,27 +104,17 @@ function handleNumbers(eventOrNumber) {
     updateDisplay()
 }
 
-function handleOperators(eventOrOperator) {
+function handleOperators() {
 
     // Handle all operation keys (-, +, *, /)
-    let realOperator;
-
-    if (memory.lastOperator) {
-        // if there was already an operator, we use that
-        // (eg. for 8 x 8 x 8 x 8 without = sign)
-        realOperator = memory.lastOperator;
-    }
-    else if (eventOrOperator.type === 'click') {
-        realOperator = this.value;
-    }
-    else {
-        realOperator = eventOrOperator;
-    }
-    // same as at handleNumbers()
     
     memory.operationCount++;
     // We need to keep track of this, because if it is the first
     // operation then what we do is different
+
+    const operator = memory.lastOperator || this.value;
+    // if there was already an operator, we use that
+    // (eg. for 8 x 8 x 8 x 8 without = sign)
 
     if (memory.operationCount < 2) {
         memory.numberStored = memory.displayNumber;
@@ -136,8 +125,9 @@ function handleOperators(eventOrOperator) {
         // otherwise we need to make an operation
         // and store the result in memory
 
-        memory.numberStored = operate(realOperator, memory.numberStored, memory.displayNumber);
+        memory.numberStored = operate(operator, memory.numberStored, memory.displayNumber);
         memory.displayNumber = memory.numberStored;
+
     }
 
     updateDisplay();
@@ -145,7 +135,7 @@ function handleOperators(eventOrOperator) {
     // reset display number (if user presses a button again)
     // and set last operator
     memory.displayNumber = 0;
-    memory.lastOperator = realOperator;
+    memory.lastOperator = this.value;
 }
 
 function handleAllClear() {
@@ -224,10 +214,6 @@ function handleKeypress(e) {
     if (keyCode >= 48 && keyCode <= 57) {
         // numbers 0 - 9
         handleNumbers(parseInt(e.key));
-    }
-    else if (keyCode === 43 || keyCode === 42 || keyCode === 45 || keyCode === 47) {
-        // + - / *
-        handleOperators(e.key);
     }
     else if (keyCode === 13 || keyCode === 32) {
         // Enter or space
