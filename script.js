@@ -51,6 +51,9 @@ const decimal = document.querySelector('button[class="decimal"]');
 const equalSign = document.querySelector('button[class="equal-sign"]');
 const backspace = document.querySelector('button[class="backspace"]');
 
+document.addEventListener('keypress', handleKeypress);
+document.addEventListener('keydown', handleKeydown) // backspace is not picked up by keypress
+
 numbers.forEach(number => {number.addEventListener('click', handleNumbers)});
 operators.forEach(operator => {operator.addEventListener('click', handleOperators)});
 allClear.addEventListener('click', handleAllClear);
@@ -58,11 +61,21 @@ equalSign.addEventListener('click', handleEquals);
 decimal.addEventListener('click', handleDecimal);
 backspace.addEventListener('click', handleBackspace);
 
-function handleNumbers() {
+function handleNumbers(eventOrNumber) {
     
-    // Handle the button press for all number buttons
+    // Handle the button press for all number buttons and keys
 
-    const number = parseInt(this.value);
+    if (eventOrNumber.type === 'click') {
+        number = parseInt(this.value)
+    }
+    else {
+        number = eventOrNumber;
+    }
+
+    number = typeof number === 'number' ? number : parseInt(this.value);
+    // if we do a click event the variable will be an event 
+    // but if we keypress, a number is passed
+
     const isDecimalActive = memory.isDecimalActive;
     const displayNumber = memory.displayNumber;
 
@@ -92,17 +105,27 @@ function handleNumbers() {
     updateDisplay()
 }
 
-function handleOperators() {
+function handleOperators(eventOrOperator) {
 
     // Handle all operation keys (-, +, *, /)
+    let realOperator;
+
+    if (memory.lastOperator) {
+        // if there was already an operator, we use that
+        // (eg. for 8 x 8 x 8 x 8 without = sign)
+        realOperator = memory.lastOperator;
+    }
+    else if (eventOrOperator.type === 'click') {
+        realOperator = this.value;
+    }
+    else {
+        realOperator = eventOrOperator;
+    }
+    // same as at handleNumbers()
     
     memory.operationCount++;
     // We need to keep track of this, because if it is the first
     // operation then what we do is different
-
-    const operator = memory.lastOperator || this.value;
-    // if there was already an operator, we use that
-    // (eg. for 8 x 8 x 8 x 8 without = sign)
 
     if (memory.operationCount < 2) {
         memory.numberStored = memory.displayNumber;
@@ -113,9 +136,8 @@ function handleOperators() {
         // otherwise we need to make an operation
         // and store the result in memory
 
-        memory.numberStored = operate(operator, memory.numberStored, memory.displayNumber);
+        memory.numberStored = operate(realOperator, memory.numberStored, memory.displayNumber);
         memory.displayNumber = memory.numberStored;
-
     }
 
     updateDisplay();
@@ -123,7 +145,7 @@ function handleOperators() {
     // reset display number (if user presses a button again)
     // and set last operator
     memory.displayNumber = 0;
-    memory.lastOperator = this.value;
+    memory.lastOperator = realOperator;
 }
 
 function handleAllClear() {
@@ -193,4 +215,35 @@ function updateDisplay() {
 
     screen.value = memory.displayString;
     
+}
+
+function handleKeypress(e) {
+
+    const keyCode = e.keyCode;
+    
+    if (keyCode >= 48 && keyCode <= 57) {
+        // numbers 0 - 9
+        handleNumbers(parseInt(e.key));
+    }
+    else if (keyCode === 43 || keyCode === 42 || keyCode === 45 || keyCode === 47) {
+        // + - / *
+        handleOperators(e.key);
+    }
+    else if (keyCode === 13 || keyCode === 32) {
+        // Enter or space
+        handleEquals()
+    }
+    else if (keyCode === 46) {
+        // dot
+        handleDecimal()
+    }
+}
+
+function handleKeydown(e) {
+
+    const keyCode = e.keyCode;
+    
+    if (keyCode === 8) {
+        handleBackspace()
+    }
 }
