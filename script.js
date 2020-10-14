@@ -28,7 +28,8 @@ function operate(operator, num1, num2) {
         case '/':
             return divide(num1, num2);
         case '':
-            // if there is no operator, we return the first number
+            // if there is no operator
+            // we return the first number
             return num1;
     }
 }
